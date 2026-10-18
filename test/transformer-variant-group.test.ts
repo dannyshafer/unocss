@@ -123,4 +123,33 @@ describe('transformer-variant-group', () => {
       }
     `)
   })
+
+  it('ignore ternary', async () => {
+    const result = await transform(`
+      const result = cond ? successMsg:(errorMsg)
+      time=time?time:(new Date).getTime()
+      const cls = cond?"hover:(p-1 p-2)":""
+    `)
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "annotations": [
+          {
+            "className": "hover:p-1",
+            "length": 3,
+            "offset": 124,
+          },
+          {
+            "className": "hover:p-2",
+            "length": 3,
+            "offset": 128,
+          },
+        ],
+        "transformed": "
+            const result = cond ? successMsg:(errorMsg)
+            time=time?time:(new Date).getTime()
+            const cls = cond?"hover:p-1 hover:p-2":""
+          ",
+      }
+    `)
+  })
 })

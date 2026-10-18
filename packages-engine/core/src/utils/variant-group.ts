@@ -73,7 +73,10 @@ export function makeRegexClassGroup(separators = ['-', ':']) {
     // The character class already accepts &, > and :; optional copies create exponentially many prefix parses.
     const prefixBracket = `\\[(?:[^\\s\\[\\]]|${nestedBracket})*\\]`
     const bodyBracket = `\\[(?:[^\\[\\]'"]|${quotedValue}|${nestedBracket})*\\]`
-    regexCache[key] = new RegExp(`((?:[!@*<~\\w+:_-]|${prefixBracket})+?)(${key})\\(((?:[~!<>@*\\w\\s:/\\\\,%#.$?-]|${bodyBracket})+?)\\)(?!\\s*?=>)`, 'gm')
+    // A group cannot start right after a ternary `?` (`cond ? a:(b)` or minified `c?a:(b)`).
+    // Rejecting a start in the middle of a prefix run stops the match from skipping past it.
+    const notAfterTernary = '(?<![!@*<~\\w+:_-]|\\?\\s*)'
+    regexCache[key] = new RegExp(`${notAfterTernary}((?:[!@*<~\\w+:_-]|${prefixBracket})+?)(${key})\\(((?:[~!<>@*\\w\\s:/\\\\,%#.$?-]|${bodyBracket})+?)\\)(?!\\s*?=>)`, 'gm')
   }
   regexCache[key].lastIndex = 0
   return regexCache[key]
